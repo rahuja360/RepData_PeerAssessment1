@@ -2,7 +2,7 @@
 title: "activity_coursera"
 author: "Rishi Ahuja"
 date: "2/27/2018"
-output: html_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
