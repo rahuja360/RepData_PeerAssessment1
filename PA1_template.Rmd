@@ -1,25 +1,132 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "activity_coursera"
+author: "Rishi Ahuja"
+date: "2/27/2018"
+output: html_document
 ---
 
+```{r setup, include=FALSE}
 
-## Loading and preprocessing the data
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
 
+knitr::opts_chunk$set(echo = TRUE)
+```
 
+## Load scripts!
 
-## What is mean total number of steps taken per day?
+```{r load script}
 
+active <- read.csv("~/Desktop/Practice/activity.csv")
 
+data <- active %>% 
+  mutate(new_date = lubridate::date(date)) %>% 
+  select(steps, interval, new_date)
+
+```
+
+## Mean of total number of steps taken per day?
+
+```{r mean of steps}
+
+#calculate the total number of steps taken per day
+
+addsteps <- data %>% 
+  group_by(new_date) %>% 
+  summarise(add_steps = sum(steps)) 
+
+addsteps
+
+#make histogram of the total number of steps taken each day
+
+addsteps %>% 
+  ggplot(aes(add_steps)) + geom_histogram()
+
+#mean and median
+
+data %>% 
+  group_by(new_date) %>% 
+  summarise(add_steps = sum(steps)) %>% 
+  summarise(mean_totalsteps = mean(add_steps, na.rm = TRUE), median_totalsteps = median(add_steps, na.rm = TRUE))
+
+```
 
 ## What is the average daily activity pattern?
 
+```{r average activity pattern}
 
+data %>%
+  group_by(interval) %>% 
+  summarize(mean_steps = mean(steps, na.rm = TRUE)) %>% 
+  ggplot(aes(interval, mean_steps)) +
+  geom_line() +
+  geom_point()
 
-## Imputing missing values
+data %>%
+  group_by(interval) %>% 
+  summarize(mean_steps = mean(steps, na.rm = TRUE)) %>%
+  filter(mean_steps == max(mean_steps))
 
+#interval 835 has the highest average steps at approximately 206
 
+```
 
-## Are there differences in activity patterns between weekdays and weekends?
+## Imputing missing values!
+
+```{r imputing missing values}
+
+data %>% 
+  select(steps) %>% 
+  summarise(sum(is.na(.)))
+
+#there are 2304 nas in the steps data
+
+#imputing strategy - replace nas with mean for the interval and create new dataset
+
+map <- data %>%
+  group_by(interval) %>% 
+  summarize(mean_steps = as.integer(mean(steps, na.rm = TRUE))) 
+
+join <- merge(data, map, by = "interval")
+
+final <-join %>%
+  mutate(steps_final = coalesce(steps, mean_steps))
+
+#make histogram of the total number of steps taken each day
+
+final %>% 
+  ggplot(aes(steps_final)) + geom_histogram()
+
+#mean and median
+
+final %>% 
+  group_by(new_date) %>% 
+  summarise(steps_final = sum(steps_final)) %>% 
+  summarise(mean_totalsteps = mean(steps_final), median_totalsteps = median(steps_final))
+
+```
+
+The mean and median are now both slightly lower. The histogram now includes many more 0s.
+
+##Are there differences in activity patterns between weekdays and weekends?
+
+```{r}
+
+weekend_identify <-final %>%
+  mutate(day_of_week = weekdays(new_date)) %>% 
+  mutate(weekend_flag = factor(ifelse(day_of_week == c("Saturday", "Sunday"), "weekend", "not_weekend")))
+
+weekend_identify
+
+final_graph <- weekend_identify %>%
+  group_by(weekend_flag, interval) %>% 
+  summarise(final_steps = mean(steps_final)) %>% 
+  ggplot(aes(interval, final_steps, color = weekend_flag)) +
+  geom_line() +
+  geom_point()
+
+final_graph
+
+```
+
