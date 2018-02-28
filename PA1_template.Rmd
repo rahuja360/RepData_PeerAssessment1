@@ -117,7 +117,7 @@ weekend_identify <-final %>%
   mutate(day_of_week = weekdays(new_date)) %>% 
   mutate(weekend_flag = factor(ifelse(day_of_week == c("Saturday", "Sunday"), "weekend", "not_weekend")))
 
-weekend_identify
+head(weekend_identify)
 
 final_graph <- weekend_identify %>%
   group_by(weekend_flag, interval) %>% 
