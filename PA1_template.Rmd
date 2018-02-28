@@ -122,7 +122,8 @@ weekend_identify
 final_graph <- weekend_identify %>%
   group_by(weekend_flag, interval) %>% 
   summarise(final_steps = mean(steps_final)) %>% 
-  ggplot(aes(interval, final_steps, color = weekend_flag)) +
+  ggplot(aes(interval, final_steps)) +
+  facet_grid(.~ weekend_flag, space = "free") +
   geom_line() +
   geom_point()
 
